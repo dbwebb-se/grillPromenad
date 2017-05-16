@@ -63,42 +63,11 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 0);
+/******/ 	return __webpack_require__(__webpack_require__.s = 10);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// src/index.js
-var m = __webpack_require__(1)
-
-var start = __webpack_require__(7)
-var question = __webpack_require__(8)
-var done = __webpack_require__(10)
-var Layout = __webpack_require__(3)
-
-m.route(document.body, "/start", {
-    "/start": {
-        render: function() {
-            return m(Layout, m(start))
-        }
-    },
-    "/question": {
-        render: function() {
-            return m(Layout, m(question))
-        }
-    },
-    "/done": {
-        render: function() {
-            return m(Layout, m(done))
-        }
-    }
-})
-
-
-/***/ }),
-/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(setImmediate, global) {;(function() {
@@ -1328,10 +1297,10 @@ m.vnode = Vnode
 if (true) module["exports"] = m
 else window.m = m
 }());
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6).setImmediate, __webpack_require__(2)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9).setImmediate, __webpack_require__(1)))
 
 /***/ }),
-/* 2 */
+/* 1 */
 /***/ (function(module, exports) {
 
 var g;
@@ -1358,10 +1327,67 @@ module.exports = g;
 
 
 /***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// src/models/User.js
+var m = __webpack_require__(0)
+
+var Game = {
+    name: "",
+    nameError: "",
+    question: {},
+    createUser: function () {
+        if (Game.name !== "") {
+            m.request({
+                url: "http://localhost:1337/name",
+                method: "POST",
+                data: { name : Game.name }
+            }).then(function(result) {
+                if (result.inserted) {
+                    Game.nameError = ""
+                    m.route.set("/question")
+                } else {
+                    Game.nameError = "Namnet finns redan"
+                }
+            })
+        }
+    },
+    getCurrentQuestion: function () {
+        if (Game.name !== "") {
+            m.request({
+                url: "http://localhost:1337/question/" + Game.name,
+                method: "GET"
+            }).then(function(result) {
+                if (result.hasOwnProperty("gameFinished")) {
+                    m.route.set("/done")
+                } else {
+                    Game.question = result
+                }
+            })
+        }
+    },
+    answerQuestion: function (answer) {
+        if (Game.name !== "" && answer !== "" && Game.question.hasOwnProperty("id")) {
+            m.request({
+                url: "http://localhost:1337/answer",
+                method: "POST",
+                data: { name: Game.name, question_id: Game.question.id, answer: answer }
+            }).then(function() {
+                Game.getCurrentQuestion()
+            })
+        }
+    }
+}
+
+module.exports = Game
+
+
+/***/ }),
 /* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var m = __webpack_require__(1)
+var m = __webpack_require__(0)
 
 module.exports = {
     view: function(vnode) {
@@ -1377,6 +1403,106 @@ module.exports = {
 
 /***/ }),
 /* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var m = __webpack_require__(0)
+
+// var Game = require("../models/game")
+
+module.exports = {
+    view: function(vnode) {
+        return m("h1", "Bra jobbat")
+    }
+}
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var m = __webpack_require__(0)
+
+var Game = __webpack_require__(2)
+
+var Component1X2 = {
+    view: function () {
+        return [
+            m("button.answer-button", { onclick : function (event) {
+                event.preventDefault()
+                Game.answerQuestion("1")
+            } }, "1"),
+            m("button.answer-button", { onclick : function (event) {
+                event.preventDefault()
+                Game.answerQuestion("X")
+            } }, "X"),
+            m("button.answer-button", { onclick : function (event) {
+                event.preventDefault()
+                Game.answerQuestion("2")
+            } }, "2")
+        ]
+    }
+}
+
+var ComponentText = {
+    answer: "",
+    view: function () {
+        return [
+            m("input.input[type=text][placeholder=Svar]", {
+                oninput: m.withAttr("value", function(value) { ComponentText.answer = value })
+            }),
+            m("button.answer-button", { onclick : function (event) {
+                event.preventDefault()
+                Game.answerQuestion(ComponentText.answer)
+            } }, "Svara")
+        ]
+    }
+}
+
+module.exports = {
+    oninit: function () {
+        Game.getCurrentQuestion()
+    },
+    view: function() {
+        if (Game.question.hasOwnProperty("id")) {
+            return [
+                m("h1", "Fråga " + Game.question.number),
+                Game.question.type === "1X2" ? m(Component1X2) : m(ComponentText)
+            ];
+        }
+
+    }
+}
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var m = __webpack_require__(0)
+
+var Game = __webpack_require__(2)
+
+module.exports = {
+    view: function(vnode) {
+        return m("form", {
+            onsubmit: function(e) {
+                e.preventDefault()
+                Game.createUser()
+            }
+        }, [
+            Game.nameError !== "" ? m("div.error", Game.nameError) : null,
+            m("label.label", "Skriv in ditt namn"),
+            m("input.input[type=text][placeholder=namn][autocomplete=off][autocorrect=off][autocapitalize=off][spellcheck=false]", {
+                oninput: m.withAttr("value", function(value) { Game.name = value })
+            }),
+            m("button.start[type=submit]", "Starta"),
+        ])
+    }
+}
+
+
+/***/ }),
+/* 7 */
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -1566,7 +1692,7 @@ process.umask = function() { return 0; };
 
 
 /***/ }),
-/* 5 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
@@ -1756,10 +1882,10 @@ process.umask = function() { return 0; };
     attachTo.clearImmediate = clearImmediate;
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2), __webpack_require__(4)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1), __webpack_require__(7)))
 
 /***/ }),
-/* 6 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var apply = Function.prototype.apply;
@@ -1812,166 +1938,40 @@ exports._unrefActive = exports.active = function(item) {
 };
 
 // setimmediate attaches itself to the global object
-__webpack_require__(5);
+__webpack_require__(8);
 exports.setImmediate = setImmediate;
 exports.clearImmediate = clearImmediate;
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var m = __webpack_require__(1)
-
-var Game = __webpack_require__(9)
-
-module.exports = {
-    view: function(vnode) {
-        return m("form", {
-            onsubmit: function(e) {
-                e.preventDefault()
-                Game.createUser()
-            }
-        }, [
-            Game.nameError !== "" ? m("div.error", Game.nameError) : null,
-            m("label.label", "Skriv in ditt namn"),
-            m("input.input[type=text][placeholder=namn][autocomplete=off][autocorrect=off][autocapitalize=off][spellcheck=false]", {
-                oninput: m.withAttr("value", function(value) { Game.name = value })
-            }),
-            m("button.start[type=submit]", "Starta"),
-        ])
-    }
-}
-
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var m = __webpack_require__(1)
-
-var Game = __webpack_require__(9)
-
-var Component1X2 = {
-    view: function () {
-        return [
-            m("button.answer-button", { onclick : function (event) {
-                event.preventDefault()
-                Game.answerQuestion("1")
-            } }, "1"),
-            m("button.answer-button", { onclick : function (event) {
-                event.preventDefault()
-                Game.answerQuestion("X")
-            } }, "X"),
-            m("button.answer-button", { onclick : function (event) {
-                event.preventDefault()
-                Game.answerQuestion("2")
-            } }, "2")
-        ]
-    }
-}
-
-var ComponentText = {
-    answer: "",
-    view: function () {
-        return [
-            m("input.input[type=text][placeholder=Svar]", {
-                oninput: m.withAttr("value", function(value) { ComponentText.answer = value })
-            }),
-            m("button.answer-button", { onclick : function (event) {
-                event.preventDefault()
-                Game.answerQuestion(ComponentText.answer)
-            } }, "Svara")
-        ]
-    }
-}
-
-module.exports = {
-    oninit: function () {
-        Game.getCurrentQuestion()
-    },
-    view: function() {
-        if (Game.question.hasOwnProperty("id")) {
-            return [
-                m("h1", "Fråga " + Game.question.number),
-                Game.question.type === "1X2" ? m(Component1X2) : m(ComponentText)
-            ];
-        }
-
-    }
-}
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// src/models/User.js
-var m = __webpack_require__(1)
-
-var Game = {
-    name: "",
-    nameError: "",
-    question: {},
-    createUser: function () {
-        if (Game.name !== "") {
-            m.request({
-                url: "http://klwpi1.clab.bth.se:1337/name",
-                method: "POST",
-                data: { name : Game.name }
-            }).then(function(result) {
-                if (result.inserted) {
-                    Game.nameError = ""
-                    m.route.set("/question")
-                } else {
-                    Game.nameError = "Namnet finns redan"
-                }
-            })
-        }
-    },
-    getCurrentQuestion: function () {
-        if (Game.name !== "") {
-            m.request({
-                url: "http://klwpi1.clab.bth.se:1337/question/" + Game.name,
-                method: "GET"
-            }).then(function(result) {
-                if (result.hasOwnProperty("gameFinished")) {
-                    m.route.set("/done")
-                } else {
-                    Game.question = result
-                }
-            })
-        }
-    },
-    answerQuestion: function (answer) {
-        if (Game.name !== "" && answer !== "" && Game.question.hasOwnProperty("id")) {
-            m.request({
-                url: "http://klwpi1.clab.bth.se:1337/answer",
-                method: "POST",
-                data: { name: Game.name, question_id: Game.question.id, answer: answer }
-            }).then(function() {
-                Game.getCurrentQuestion()
-            })
-        }
-    }
-}
-
-module.exports = Game
 
 
 /***/ }),
 /* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var m = __webpack_require__(1)
+// src/index.js
+var m = __webpack_require__(0)
 
-// var Game = require("../models/game")
+var start = __webpack_require__(6)
+var question = __webpack_require__(5)
+var done = __webpack_require__(4)
+var Layout = __webpack_require__(3)
 
-module.exports = {
-    view: function(vnode) {
-        return m("h1", "Bra jobbat")
+m.route(document.body, "/start", {
+    "/start": {
+        render: function() {
+            return m(Layout, m(start))
+        }
+    },
+    "/question": {
+        render: function() {
+            return m(Layout, m(question))
+        }
+    },
+    "/done": {
+        render: function() {
+            return m(Layout, m(done))
+        }
     }
-}
+})
 
 
 /***/ })
