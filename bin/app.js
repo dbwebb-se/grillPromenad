@@ -1340,7 +1340,7 @@ var Game = {
     createUser: function () {
         if (Game.name !== "") {
             m.request({
-                url: "http://klwpi1.clab.bth.se:1337/name",
+                url: "http://lewenhagen.net:1337/name",
                 method: "POST",
                 data: { name : Game.name }
             }).then(function(result) {
@@ -1356,7 +1356,7 @@ var Game = {
     getCurrentQuestion: function () {
         if (Game.name !== "") {
             m.request({
-                url: "http://klwpi1.clab.bth.se:1337/question/" + Game.name,
+                url: "http://lewenhagen.net:1337/question/" + Game.name,
                 method: "GET"
             }).then(function(result) {
                 if (result.hasOwnProperty("gameFinished")) {
@@ -1370,7 +1370,7 @@ var Game = {
     answerQuestion: function (answer) {
         if (Game.name !== "" && answer !== "" && Game.question.hasOwnProperty("id")) {
             m.request({
-                url: "http://klwpi1.clab.bth.se:1337/answer",
+                url: "http://lewenhagen.net:1337/answer",
                 method: "POST",
                 data: { name: Game.name, question_id: Game.question.id, answer: answer }
             }).then(function() {
