@@ -1,0 +1,24 @@
+{
+  "name": "grillPromenad",
+  "version": "1.0.0",
+  "description": "Tipspromenad för GrillCon grillen.",
+  "main": "index.js",
+  "scripts": {
+     "start": "webpack src/index.js bin/app.js --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dbwebb-se/grillPromenad.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dbwebb-se/grillPromenad/issues"
+  },
+  "homepage": "https://github.com/dbwebb-se/grillPromenad#readme",
+  "dependencies": {
+    "mithril": "^1.1.1",
+    "webpack": "^2.5.1"
+  }
+}
